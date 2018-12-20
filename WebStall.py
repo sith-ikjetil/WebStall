@@ -66,7 +66,10 @@ class WebStallThread (threading.Thread):
     try:
         while Flag == True and do_exit == False:
             if si > 0:
-                time.sleep(tts)
+                if si < slen:
+                    time.sleep(tts)
+                else:
+                    time.sleep(1)
 
             if si < slen:
                 try:
@@ -139,7 +142,8 @@ try:
         a.join()
 
 except KeyboardInterrupt as ki:
-    print("> Keyboard Interrupt - Wait for Cleanup <")
+    print("> Keyboard Interrupt <")
+    print("> Waiting for Threads to Finish <")
     Flag = False
     for a in thread_list:
         a.join()
