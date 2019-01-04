@@ -31,12 +31,12 @@ def PrintHelp():
     print(" -h, --help                 display this help")
     print(" -a, --address      (1)     domain")
     print(" -d, --directory            directory with HTTP request files")
-    print(" -t, --threads      (2)       number of threads.")
+    print(" -t, --threads      (2)     number of threads.")
     print(" -s, --sleep                HTTP request chars delay - in seconds")
     print(" -e, --extension    (3)     HTTP request file extension")
     print("")
     print("(1) Required field")
-    print("(2) Min: 1, Max: 999")
+    print("(2) Min: 1, Max: 999, Default: 1")
     print("(3) Default is .txt")
     print("")
 
@@ -124,6 +124,8 @@ class WebStallThread (threading.Thread):
                         break
             
                 si += 1
+            else:
+               do_exit = True
     except KeyboardInterrupt as ki:
         PrintToConsole(self.thread_number, "> Keyboard Interrupt <")
         print("> Waiting for Threads to Finish <")
