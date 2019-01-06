@@ -174,6 +174,11 @@ try:
     
     directory = str(GetArgValue("-d", "--directory"))   #: directory with http request files
     extension = str(GetArgValue("-e", "--extension"))
+    if len(extension) > 0:
+        if extension[0] != ".":
+            extension = "." + extension
+    else:
+        extension = ".txt"
 except ValueError as ex:
     AppLog.LogError("One or more Invalid parameter!")
     AppLog.PrintToConsole()
@@ -205,4 +210,4 @@ except KeyboardInterrupt as ki:
     for a in thread_list:
         a.join()
 
-print("> End of Program <")
+    print("> End of Program <")
