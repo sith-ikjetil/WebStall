@@ -16,6 +16,7 @@ import time
 import threading
 import socket
 import errno
+import glob
 
 #
 # Print Help
@@ -99,6 +100,13 @@ class WebStallThread (threading.Thread):
     do_exit = False
     global Flag
     try:
+        if len(directory) > 0 and len(directory_files) > 0:
+            PrintToConsole(self.thread_number, "Reading from: " + directory_files[self.thread_number-1])
+            f = open(directory_files[self.thread_number-1], "r")
+            sz = f.read()
+            slen = len(sz)
+            f.close()
+
         while Flag == True and do_exit == False:
             if si > 0:
                 if si < slen:
@@ -145,6 +153,7 @@ ttc = 1                 #: threads
 tts = 0                 #: sleep sec
 directory = ""          #: directory
 extension = ".txt"      #: direcory extensions to look for
+directory_files = []
 try:
     if GetHasArgValue("-h", "--help"):
         PrintHelp()
@@ -179,6 +188,11 @@ try:
             extension = "." + extension
     else:
         extension = ".txt"
+    if len(directory) > 0:
+        if directory[len(directory)-1] != "/":
+            directory = directory + "/"
+        directory_files = glob.glob(directory+"*.txt")
+        ttc = len(directory_files)
 except ValueError as ex:
     AppLog.LogError("One or more Invalid parameter!")
     AppLog.PrintToConsole()
