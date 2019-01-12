@@ -180,19 +180,24 @@ try:
             tts = int(GetArgValue("-s", "--sleep"))     #: delay in seconds
         except ValueError:
             tts = 0
-    
-    directory = str(GetArgValue("-d", "--directory"))   #: directory with http request files
+  
     extension = str(GetArgValue("-e", "--extension"))
     if len(extension) > 0:
         if extension[0] != ".":
             extension = "." + extension
     else:
         extension = ".txt"
+
+    directory = str(GetArgValue("-d", "--directory"))   #: directory with http request files 
     if len(directory) > 0:
         if directory[len(directory)-1] != "/":
             directory = directory + "/"
-        directory_files = glob.glob(directory+"*.txt")
+        directory_files = glob.glob(directory+"*"+extension)
         ttc = len(directory_files)
+        if ttc == 0 or ttc > 999:
+            print("> Too many files. Must be more than 0 and less than or equal 999. See threads argument in help. <")
+            PrintHelp()
+            exit(1)
 except ValueError as ex:
     AppLog.LogError("One or more Invalid parameter!")
     AppLog.PrintToConsole()
