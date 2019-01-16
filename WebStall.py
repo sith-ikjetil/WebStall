@@ -77,11 +77,14 @@ def PrintToConsole(thread_number, msg):
     print("Thread %03d :: %s" % (thread_number, msg))
 
 class WebStallThread (threading.Thread):
-   def __init__(self, domain, delay_sec, thread_number):
+   def __init__(self, domain, delay_sec, thread_number, directory, directory_files, tts):
       threading.Thread.__init__(self)
       self.domain = domain
       self.delay_sec = delay_sec
       self.thread_number = thread_number
+      self.directory = directory
+      self.directory_files = directory_files
+      self.tts = tts
 
    def run(self):
     ihttp = ItsHttp.ItsHttp()
@@ -90,19 +93,19 @@ class WebStallThread (threading.Thread):
     s = ihttp.CreateHttpSocket()
     
     PrintToConsole(self.thread_number, "Connecting HTTP Socket")
-    ihttp.ConnectHttpSocket(s, domain)
+    ihttp.ConnectHttpSocket(s, self.domain)
     
     PrintToConsole(self.thread_number, "Sending HTTP Data")
 
-    sz = "GET / HTTP/1.1\nHOST: " + domain + "\n"  # + "\n" # Do not send the last linefeed
+    sz = "GET / HTTP/1.1\nHOST: " + self.domain + "\n"  # + "\n" # Do not send the last linefeed
     si = 0
     slen = len(sz)
     do_exit = False
     global Flag
     try:
-        if len(directory) > 0 and len(directory_files) > 0:
-            PrintToConsole(self.thread_number, "Reading from: " + directory_files[self.thread_number-1])
-            f = open(directory_files[self.thread_number-1], "r")
+        if len(self.directory) > 0 and len(self.directory_files) > 0:
+            PrintToConsole(self.thread_number, "Reading from: " + self.directory_files[self.thread_number-1])
+            f = open(self.directory_files[self.thread_number-1], "r")
             sz = f.read()
             slen = len(sz)
             f.close()
@@ -110,7 +113,7 @@ class WebStallThread (threading.Thread):
         while Flag == True and do_exit == False:
             if si > 0:
                 if si < slen:
-                    time.sleep(tts)
+                    time.sleep(self.tts)
                 else:
                     time.sleep(1)
 
@@ -146,87 +149,96 @@ class WebStallThread (threading.Thread):
 #
 # Main 
 #
-print("> Starting <")
+def main():
+    print("> Starting <")
 
-domain = ""             #: domain
-ttc = 1                 #: threads
-tts = 0                 #: sleep sec
-directory = ""          #: directory
-extension = ".txt"      #: direcory extensions to look for
-directory_files = []
-try:
-    if GetHasArgValue("-h", "--help"):
-        PrintHelp()
-        exit(0)
-    
-    domain = str(GetArgValue("-a","--address"))         #: domain
-    if len(domain) <= 0:
-        PrintHelp()
-        exit(1)
-
-    tmp = GetArgValue("-t","--threads")
-    if len(tmp) > 0:
-        try:
-            ttc = int(GetArgValue("-t", "--threads"))   #: threads
-            if ttc <= 0 or ttc > 999:
-                PrintHelp()
-                exit(1)
-        except ValueError:
-            ttc = 1
-
-    tmp = GetArgValue("-s", "--sleep")
-    if len(tmp) > 0:
-        try:
-            tts = int(GetArgValue("-s", "--sleep"))     #: delay in seconds
-        except ValueError:
-            tts = 0
-  
-    extension = str(GetArgValue("-e", "--extension"))
-    if len(extension) > 0:
-        if extension[0] != ".":
-            extension = "." + extension
-    else:
-        extension = ".txt"
-
-    directory = str(GetArgValue("-d", "--directory"))   #: directory with http request files 
-    if len(directory) > 0:
-        if directory[len(directory)-1] != "/":
-            directory = directory + "/"
-        directory_files = glob.glob(directory+"*"+extension)
-        ttc = len(directory_files)
-        if ttc == 0 or ttc > 999:
-            print("> Too many files. Must be more than 0 and less than or equal 999. See threads argument in help. <")
+    global Flag
+    domain = ""             #: domain
+    ttc = 1                 #: threads
+    tts = 0                 #: sleep sec
+    directory = ""          #: directory
+    extension = ".txt"      #: direcory extensions to look for
+    directory_files = []
+    try:
+        if GetHasArgValue("-h", "--help"):
+            PrintHelp()
+            exit(0)
+        
+        domain = str(GetArgValue("-a","--address"))         #: domain
+        if len(domain) <= 0:
             PrintHelp()
             exit(1)
-except ValueError as ex:
-    AppLog.LogError("One or more Invalid parameter!")
-    AppLog.PrintToConsole()
-    exit(3)
 
-print("> Creating Threads <")
+        tmp = GetArgValue("-t","--threads")
+        if len(tmp) > 0:
+            try:
+                ttc = int(GetArgValue("-t", "--threads"))   #: threads
+                if ttc <= 0 or ttc > 999:
+                    PrintHelp()
+                    exit(1)
+            except ValueError:
+                ttc = 1
 
-thread_list = []
-i = 0
-while i < ttc:
-    thread_list.append(WebStallThread(domain,tts,i+1))
-    i += 1
+        tmp = GetArgValue("-s", "--sleep")
+        if len(tmp) > 0:
+            try:
+                tts = int(GetArgValue("-s", "--sleep"))     #: delay in seconds
+            except ValueError:
+                tts = 0
+    
+        extension = str(GetArgValue("-e", "--extension"))
+        if len(extension) > 0:
+            if extension[0] != ".":
+                extension = "." + extension
+        else:
+            extension = ".txt"
 
-print("> Running Threads <")
-for a in thread_list:
-    a.start()
+        directory = str(GetArgValue("-d", "--directory"))   #: directory with http request files 
+        if len(directory) > 0:
+            if directory[len(directory)-1] != "/":
+                directory = directory + "/"
+            directory_files = glob.glob(directory+"*"+extension)
+            ttc = len(directory_files)
+            if ttc == 0 or ttc > 999:
+                print("> Too many files. Must be more than 0 and less than or equal 999. See threads argument in help. <")
+                PrintHelp()
+                exit(1)
+    except ValueError as ex:
+        AppLog.LogError("One or more Invalid parameter!")
+        AppLog.PrintToConsole()
+        exit(3)
 
-print("> Working <")
-try:
+    print("> Creating Threads <")
 
+    thread_list = []
+    i = 0
+    while i < ttc:
+        thread_list.append(WebStallThread(domain,tts,i+1,directory,directory_files, tts))
+        i += 1
+
+    print("> Running Threads <")
     for a in thread_list:
-        a.join()
+        a.start()
 
-except KeyboardInterrupt as ki:
-    print("")
-    print("> Keyboard Interrupt <")
-    print("> Waiting for Threads to Finish <")
-    Flag = False
-    for a in thread_list:
-        a.join()
+    print("> Working <")
+    try:
+
+        for a in thread_list:
+            a.join()
+
+    except KeyboardInterrupt as ki:
+        print("")
+        print("> Keyboard Interrupt <")
+        print("> Waiting for Threads to Finish <")
+        Flag = False
+        for a in thread_list:
+            a.join()
 
     print("> End of Program <")
+
+
+#
+# Call main
+#
+if __name__ == "__main__":
+    main()
