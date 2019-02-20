@@ -223,7 +223,7 @@ def main():
             directory_files = glob.glob(directory+"*"+extension)
             ttc = len(directory_files)
             if ttc == 0 or ttc > 999:
-                print("> Too many files. Must be more than 0 and less than or equal 999. See threads argument in help. <")
+                print("> Too many or too little number of files. Must be more than 0 and less than or equal 999. See threads argument in help. <")
                 PrintHelp()
                 exit(1)
 
