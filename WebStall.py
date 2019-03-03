@@ -17,6 +17,7 @@ import threading
 import socket
 import errno
 import glob
+import os.path
 
 #
 # Print Help
@@ -36,6 +37,7 @@ def PrintHelp():
     print(" -s, --sleep                  HTTP request chars delay - in seconds")
     print(" -e, --extension      (3)     HTTP request file extension")
     print(" -r, --create-request (4)     Creates default request files in directory")
+    print(" -p, --template               File that is used as template to -r, --create-request")
     print("")
     print("(1) Required field")
     print("(2) Min: 1, Max: 999, Default: 1")
@@ -65,18 +67,22 @@ def GetHasArgValue(token1, token2):
         i += 1
     return False
 
-def CreateDefaultRequestFiles(directory, extension, domain, count):
+def CreateDefaultRequestFiles(directory, extension, domain, count, req_template):
     if directory[len(directory)-1] != "/":
         directory = directory + "/"
+    
     i = 0
+    
+    content = "GET / HTTP/1.1\nHOST: " + domain + "\n\n"
+    
+    if len(req_template) > 0 and os.path.isfile(req_template):
+        with open(req_template, "r") as content_file:
+            content = content_file.read()
+
     while i < count:
         filename = directory + str(i+1) + extension
         f = open(filename, "w")
-        f.write("GET / HTTP/1.1")
-        f.write("\n")
-        f.write("HOST: " + domain)
-        f.write("\n")
-        f.write("\n")
+        f.write( content )
         f.close()
         i += 1
 
@@ -176,6 +182,7 @@ def main():
     extension = ".txt"      #: direcory extensions to look for
     directory_files = []
     def_req = False
+    req_template = ""
     try:
         if GetHasArgValue("-h", "--help"):
             PrintHelp()
@@ -210,10 +217,11 @@ def main():
         else:
             extension = ".txt"
 
+        req_template = GetArgValue("-p", "--template")
         def_req = GetHasArgValue("-r","--create-request")        
         directory = str(GetArgValue("-d", "--directory"))   #: directory with http request files 
         if def_req and len(directory) > 0 and ttc >= 1:
-            CreateDefaultRequestFiles(directory,extension,domain,ttc)
+            CreateDefaultRequestFiles(directory,extension,domain,ttc,req_template)
             print("> Default Request Files Written <")
             exit(0)
 
