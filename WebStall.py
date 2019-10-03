@@ -3,8 +3,8 @@
 #: Date        : 2018-12-17
 #: Author      : "Kjetil Kristoffer Solberg" <post@ikjetil.no>
 #: Version     : 0.1
-#: Description : Stalls web servers.
-#: Usage       : ./WebStall.py <domain> <threads> <delay sec>
+#: Description : Stalls some unpatched web servers.
+#: Usage       : ./WebStall.py [options]
 
 #
 # import
