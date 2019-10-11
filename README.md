@@ -22,3 +22,4 @@ Usage:
   (3) Default is .txt
   (4) Creates -t number of default request files in -d directory with -e extension
 ```
+**NB! THIS SOFTWARE HAS NO LICENSE!**
