@@ -1,4 +1,5 @@
 # WebStall
+License: **GPL-3.0-or-later**  
 An attempt at slow loris attack implementation in python.
 
 ```
@@ -22,4 +23,4 @@ Usage:
   (3) Default is .txt
   (4) Creates -t number of default request files in -d directory with -e extension
 ```
-**NB! THIS SOFTWARE HAS NO LICENSE!**
+
