@@ -1,7 +1,7 @@
 # WebStall
 License: **GPL-3.0-or-later**  
 An attempt at slow loris attack implementation in python.
-
+ 
 ```
 Usage:
  WebStall.py [options]
